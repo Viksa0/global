@@ -1,0 +1,210 @@
+t="""ВГлобальная сеть — любая сеть связи, которая охватывает всю Землю. Термин, используемый в данной статье, относится в более узком смысле к двунаправленным сетям связи, 
+а также базе технологий сетей. Ранние сети, такие как международные почтовые отправления, и однонаправленные сети связи, такие как радио и телевидение, не рассматриваются. Первая глобальная сеть была создана с помощью электрического 
+телеграфа и достигла глобального размаха в 1899 году. Телефонные сети были вторыми и достигли глобального статуса в 1950-х годах. Совсем недавно взаимосвязанные IP-сети (в основном Интернет, по оценкам, 
+360 миллионов пользователей по всему миру в 2009 году), а также мобильные GSM-сети (более 3 миллиардов пользователей по всему миру в 2009 году) образовали крупнейшие глобальные сети из всех. Построение 
+глобальных сетей требует огромных дорогостоящих усилий, длящихся в течение многих десятилетий. Разрабатываемые соединения, переключаемые и направляющие устройства, разбивка физических носителей информации, 
+таких как наземные и подводные кабели и наземные станции, должны быть введены в эксплуатацию. Кроме того, вовлекаются протоколы международной коммуникации, законодательство и соглашения.
+Спутники связи — важная часть глобальных сетей. Имеются определенные глобальные группировки из низкоорбитальных спутников, такие как Iridium, Globalstar и Orbcomm, которые состоят из множества 
+аналогичных спутников, выходят на орбиту, расположенную с равными интервалами позиций и формируют mesh-сеть, иногда отправляя и получая информацию непосредственно между собой. Спутниковый доступ в 
+Интернет стал возможным благодаря технологии VSAT.
+Считается, что 80 % глобального рынка мобильной связи использует стандарт GSM, существующий больше чем в 212 странах и территориях. Его повсеместность делает международный роуминг очень 
+распространенным между операторами мобильной телефонии, позволяя подписчикам использовать их телефоны во многих частях мира. Чтобы достигнуть этого, данные сети должны быть соединены посредством пиринга, и поэтому сеть GSM — действительно глобальная.
+
+"""
+def coding(text):
+  import numpy as np
+  import zlib
+  crc32=zlib.crc32(text.encode('utf-8'))
+  a=[]
+  for elem in text:
+    a.append(ord(elem))
+  x=np.zeros((len(a)//3+min(len(a)%3,1),45))
+  for index in range(0,len(a),3):
+    b=np.zeros(20)
+    for i in range(20):
+      if 2**(19-i)<=a[index]:
+        b[i]=1
+        a[index]-=2**(19-i)
+    k=0
+    for i in range(25):
+     if 2**k==i+1:
+      k+=1
+     else:
+      x[index//3][i]=b[i-k]
+    b=np.zeros(20)
+    if index+1<len(a):
+      for i in range(20):
+        if 2**(19-i)<=a[index+1]:
+          b[i]=1
+          a[index+1]-=2**(19-i)
+    for i in range(20):
+      if i<6:
+       x[index//3][i+25]=b[i]
+      else:
+       x[index//3][i+26]=b[i]      
+    b=np.zeros(20)
+    if index+2<len(a):
+      for i in range(20):
+        if 2**(19-i)<=a[index+2]:
+          b[i]=1
+          a[index+2]-=2**(19-i)      
+    for i in range(20):
+      if i<17:
+       x[index//3][i+46]=b[i]
+      else:
+       x[index//3][i+47]=b[i]   
+  p=[]      
+  for ind in range(x.shape[0]):
+    y=np.zeros(7)    
+    for i in range(7):
+      s=0
+      for j in range(2**i-1, 45, 2**(i+1)):
+        for k in range(2**i):
+          if j+k<67:
+            s+=x[ind][j+k]
+      y[i]=int(s)%2
+    for i in range(7):        
+      x[ind][2**i-1]=y[i]
+    p.append(y)
+  cons=zlib.crc32(str(p).encode('utf-8'))
+  return x, p, crc32, cons
+  def encoding(mes, matr, c32, cs):
+  
+  import numpy as np
+  import zlib
+   
+  message, mat=mes.copy(), matr.copy()
+  if cs==zlib.crc32(str(mat).encode('utf-8')):
+    print('контрольная сумма корректна') 
+  def con_sum(message):
+    p=[]    
+    for ind in range(message.shape[0]):
+      y=np.zeros(7)  
+      for i in range(7):
+        s=0
+        for j in range(2**i-1, 45, 2**(i+1)):
+          for k in range(2**i):
+            if j+k < 45:
+              s+=message[ind][j+k]
+        y[i]=int(s)%2
+      p.append(y)
+    return(p)
+  def go_back(x):
+    k=0
+    w1=[]
+    w2=[]
+    w3=[]
+    for i in range(25):
+      if 2**k==i+1:
+        k+=1
+      else:
+        w1.append(x[i])
+    for i in range(25,46):
+      if 2**k==i+1:
+        k+=1
+      else:
+        w2.append(x[i])
+    for i in range(46,45):
+      if 2**k==i+1:
+        k+=1
+      else:
+        w3.append(x[i])    
+    l1=0    
+    for i in range(len(w1)):
+      l1+=2**(19-i)*w1[i]
+    l=chr(int(l1))
+    l2=0    
+    for i in range(len(w2)):
+      l2+=2**(19-i)*w2[i]
+    l3=0    
+    for i in range(len(w3)):
+      l3+=2**(19-i)*w3[i]    
+    if l2!=0:  
+      l+=chr(int(l2))
+    if l3!=0:
+      l+=chr(int(l3))
+    return l
+  def eq(m1,m2):
+    flag=True
+    for i in range(len(m1)):
+      for j in range (len(m1[0])):
+        if m1[i][j]!=m2[i][j]:
+          flag=False
+    return flag
+  for ind in range(message.shape[0]):
+    for i in range(7):
+      message[ind][2**i-1]=0
+  p=con_sum(message)
+  if (eq(p,mat)):
+    text=''
+    for ind in range(message.shape[0]):
+      text+=go_back(message[ind])
+  else: 
+    for ind in range(len(p)):
+        err=0  
+        for i in range(len(p[ind])):
+          if p[ind][i]!=mat[ind][i] and err+2**i <= 45:
+            err+=2**i
+        if err>0:
+          message[ind][err-1]=1-message[ind][err-1]
+    p=con_sum(message)
+    text=''
+    for ind in range(message.shape[0]):
+      text+=go_back(message[ind])
+  if c32==zlib.crc32(text.encode('utf-8')):
+    print('сообщение доставлено верно')
+  else:
+    print('в доставленном сообщении имеются ошибки')
+  return text
+  mes, matr, c32, cs=coding(t) 
+  te=encoding(mes, matr, c32, cs)
+  print(t==te)
+  def eq(m1,m2):
+    flag=True
+    for i in range(len(m1)):
+      for j in range (len(m1[0])):
+        if m1[i][j]!=m2[i][j]:
+          flag=False
+    return flag 
+m1, mat1, c1, cs1=coding(t)
+m2, mat2, c2, cs2=coding(t)
+import random
+for i in range(m1.shape[0]):
+  j=random.randint(0,44)
+  m1[i][j]=1-m1[i][j]
+eq(m1,m2)
+encoding(m1,mat1,c1,cs1)==encoding(m2,mat2,c2,cs2)
+t==encoding(m1,mat1,c1,cs1)
+m3, mat3, c3, cs3=coding(t)
+n=0
+import random
+for i in range(m3.shape[0]):
+  j=random.randint(10,44)
+  n+=1
+  m3[i][j]=1-m3[i][j]
+  r=random.choice([True, False])
+  k=random.choice(list(range(-10,10)))
+  if r:
+    m3[i][j+k]=1-m3[i][j+k]
+    if (j<25 and j+k>=25) or (j>=25 and j<46 and (j+k<25 or j+k>=46)) or (j>=46 and j+k<46):
+      n+=1
+#ошибки допущены в (символах):      
+print(n/(m3.shape[0]*3))
+print(n)
+dec=encoding(m3,mat3,c3,cs3)
+dec==t
+err=0
+for i in range(len(dec)):
+  if dec[i]!=t[i]:
+    err+=1
+print(err/len(dec))
+print(err)
+print(n-err)
+tr=0
+f=0
+for i in range(0,len(t),3):
+  if dec[i]==t[i] and dec[i+1]==t[i+1] and dec[i+2]==t[i+2]:
+    tr+=1
+  else:
+    f+=1
+ print(tr,f)
